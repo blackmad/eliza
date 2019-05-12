@@ -178,6 +178,7 @@ key: i
     reasmb: What if you never got (3) ?
     reasmb: What would getting (3) mean to you ?
     reasmb: What does wanting (3) have to do with this discussion ?
+    resamb: For how long have you been wanting (3)?
   decomp: * i am * @sad *
     reasmb: I am sorry to hear that you are (3) .
     reasmb: Do you think that coming here will help you not to be (3) ?

@@ -1,9 +1,12 @@
 import logging
 import random
 import re
+import string
 from collections import namedtuple
+from nltk.tokenize import word_tokenize
 
 log = logging.getLogger(__name__)
+log.level = logging.DEBUG
 
 
 class Key:
@@ -23,6 +26,9 @@ class Decomp:
 
 class Eliza:
     def __init__(self):
+        self.memory = []
+
+    def reinit(self):
         self.initials = []
         self.finals = []
         self.quits = []
@@ -30,9 +36,9 @@ class Eliza:
         self.posts = {}
         self.synons = {}
         self.keys = {}
-        self.memory = []
 
     def load(self, path):
+        self.reinit()
         key = None
         decomp = None
         with open(path) as file:
@@ -126,6 +132,7 @@ class Eliza:
                 output.extend(insert)
             else:
                 output.append(reword)
+
         return output
 
     def _sub(self, words, sub):
@@ -168,12 +175,12 @@ class Eliza:
         if text in self.quits:
             return None
 
-        text = re.sub(r'\s*\.+\s*', ' . ', text)
-        text = re.sub(r'\s*,+\s*', ' , ', text)
-        text = re.sub(r'\s*;+\s*', ' ; ', text)
-        log.debug('After punctuation cleanup: %s', text)
+        # text = re.sub(r'\s*\.+\s*', ' . ', text)
+        # text = re.sub(r'\s*,+\s*', ' , ', text)
+        # text = re.sub(r'\s*;+\s*', ' ; ', text)
+        # log.debug('After punctuation cleanup: %s', text)
 
-        words = [w for w in text.split(' ') if w]
+        words = [w for w in word_tokenize(text) if w and w not in string.punctuation]
         log.debug('Input: %s', words)
 
         words = self._sub(words, self.pres)
@@ -199,6 +206,7 @@ class Eliza:
                 output = self._next_reasmb(self.keys['xnone'].decomps[0])
                 log.debug('Output from xnone: %s', output)
 
+        if output[-1]
         return " ".join(output)
 
     def initial(self):
@@ -221,10 +229,30 @@ class Eliza:
 
         print(self.final())
 
+ConfigFile = 'doctor.txt'
+
+from watchdog.events import FileSystemEventHandler
+class MyHandler(FileSystemEventHandler):
+    def __init__(self, eliza):
+        self.eliza = eliza
+
+    def on_modified(self, event):
+        #print(f'event type: {event.event_type}  path : {event.src_path}')
+        if event.src_path == ConfigFile:
+            print('reloading')
+            self.eliza.load(ConfigFile)
 
 def main():
     eliza = Eliza()
-    eliza.load('doctor.txt')
+
+    from watchdog.observers import Observer
+    from watchdog.events import LoggingEventHandler
+
+    observer = Observer()
+    observer.schedule(MyHandler(eliza), '.', recursive=False)
+    observer.start()
+
+    eliza.load(ConfigFile)
     eliza.run()
 
 if __name__ == '__main__':
