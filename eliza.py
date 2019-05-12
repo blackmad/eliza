@@ -206,7 +206,10 @@ class Eliza:
                 output = self._next_reasmb(self.keys['xnone'].decomps[0])
                 log.debug('Output from xnone: %s', output)
 
-        if output[-1]
+        if output[-1] in string.punctuation:
+            output[-2] += output[-1]
+            del output[-1]
+
         return " ".join(output)
 
     def initial(self):
