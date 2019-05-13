@@ -1,4 +1,4 @@
-initial: How do you do.  Please tell me your problem.
+initial: Hi, I'm here to provide a safe but challenging space to talk about sex. It can be really hard for a lot of people to open up about their needs and desires. Is there a need or desire you'd like to talk about today?
 final: Goodbye.  Thank you for talking to me.
 quit: bye
 quit: goodbye
@@ -173,6 +173,7 @@ key: was 2
 key: i
   decomp: * i @desire *
     reasmb: What would it mean to you if you got (3) ?
+    reasmb: Have you explored (3) before ?
     reasmb: Why do you want (3) ?
     reasmb: Suppose you got (3) soon ?
     reasmb: What if you never got (3) ?
@@ -260,22 +261,22 @@ key: no
     reasmb: You are being a bit negative.
     reasmb: Why not ?
     reasmb: Why 'no' ?
-key: my 2
-  decomp: $ * my *
-    reasmb: Lets discuss further why your (2) .
-    reasmb: Earlier you said your (2) .
-    reasmb: But your (2) .
-    reasmb: Does that have anything to do with the fact that your (2) ?
-  decomp: * my * @family *
-    reasmb: Tell me more about your family.
-    reasmb: Who else in your family (4) ?
-    reasmb: Your (3) ?
-    reasmb: What else comes to mind when you think of your (3) ?
-  decomp: * my *
-    reasmb: Your (2) ?
-    reasmb: Why do you say your (2) ?
-    reasmb: Does that suggest anything else which belongs to you ?
-    reasmb: Is it important that your (2) ?
+#key: my 2
+#  decomp: $ * my *
+#    reasmb: Lets discuss further why your (2) .
+#    reasmb: Earlier you said your (2) .
+#    reasmb: But your (2) .
+#    reasmb: Does that have anything to do with the fact that your (2) ?
+#  decomp: * my * @family *
+#    reasmb: Tell me more about your family.
+#    reasmb: Who else in your family (4) ?
+#    reasmb: Your (3) ?
+#    reasmb: What else comes to mind when you think of your (3) ?
+#  decomp: * my *
+#    reasmb: Your (2) ?
+#    reasmb: Why do you say your (2) ?
+#    reasmb: Does that suggest anything else which belongs to you ?
+#    reasmb: Is it important that your (2) ?
 key: can
   decomp: * can you *
     reasmb: You believe I can (2) don't you ?

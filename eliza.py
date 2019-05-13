@@ -4,10 +4,15 @@ import re
 import string
 from collections import namedtuple
 from nltk.tokenize import word_tokenize
+import os
+import mlconjug
+import spacy
 
+import logging
 log = logging.getLogger(__name__)
-log.level = logging.DEBUG
+#log.level = logging.DEBUG
 
+# default_conjugator.conjugate("see").conjug_info['indicative']['indicative present continuous']['2p 2p']
 
 class Key:
     def __init__(self, word, weight, decomps):
@@ -22,11 +27,21 @@ class Decomp:
         self.save = save
         self.reasmbs = reasmbs
         self.next_reasmb_index = 0
+        self.used_indexes = []
+
+class ElizaHelpers:
+    @staticmethod
+    def remove_punctuation(text):
+        for punct in [',', '.', ';']:
+            if punct in text:
+                text = text[:text.index(punct)]
+        return text
 
 
 class Eliza:
-    def __init__(self):
+    def __init__(self, config_file):
         self.memory = []
+        self.load(config_file)
 
     def reinit(self):
         self.initials = []
@@ -44,6 +59,8 @@ class Eliza:
         with open(path) as file:
             for line in file:
                 if not line.strip():
+                    continue
+                if line[0] == '0':
                     continue
                 tag, content = [part.strip() for part in line.split(':')]
                 if tag == 'initial':
@@ -111,10 +128,13 @@ class Eliza:
         return None
 
     def _next_reasmb(self, decomp):
-        index = decomp.next_reasmb_index
-        result = decomp.reasmbs[index % len(decomp.reasmbs)]
-        decomp.next_reasmb_index = index + 1
-        return result
+        if len(decomp.used_indexes) == len(decomp.reasmbs):
+            decomp.used_indexes = []
+
+        possible_indexes = [i for i in range(0, len(decomp.reasmbs)) if i not in decomp.used_indexes]
+        index = random.choice(possible_indexes)
+        decomp.used_indexes.append(index)
+        return decomp.reasmbs[index]
 
     def _reassemble(self, reasmb, results):
         output = []
@@ -122,13 +142,15 @@ class Eliza:
             if not reword:
                 continue
             if reword[0] == '(' and reword[-1] == ')':
-                index = int(reword[1:-1])
+                command_parts = int(reword[1:-1]).split(':')
+                index = int(command_parts[0])
+
                 if index < 1 or index > len(results):
                     raise ValueError("Invalid result index {}".format(index))
+
                 insert = results[index - 1]
-                for punct in [',', '.', ';']:
-                    if punct in insert:
-                        insert = insert[:insert.index(punct)]
+                insert = ElizaHelpers.remove_punctuation(insert)
+
                 output.extend(insert)
             else:
                 output.append(reword)
@@ -175,11 +197,6 @@ class Eliza:
         if text in self.quits:
             return None
 
-        # text = re.sub(r'\s*\.+\s*', ' . ', text)
-        # text = re.sub(r'\s*,+\s*', ' , ', text)
-        # text = re.sub(r'\s*;+\s*', ' ; ', text)
-        # log.debug('After punctuation cleanup: %s', text)
-
         words = [w for w in word_tokenize(text) if w and w not in string.punctuation]
         log.debug('Input: %s', words)
 
@@ -206,7 +223,10 @@ class Eliza:
                 output = self._next_reasmb(self.keys['xnone'].decomps[0])
                 log.debug('Output from xnone: %s', output)
 
-        if output[-1]
+        if output[-1] in string.punctuation:
+            output[-2] += output[-1]
+            del output[-1]
+            
         return " ".join(output)
 
     def initial(self):
@@ -214,47 +234,3 @@ class Eliza:
 
     def final(self):
         return random.choice(self.finals)
-
-    def run(self):
-        print(self.initial())
-
-        while True:
-            sent = input('> ')
-
-            output = self.respond(sent)
-            if output is None:
-                break
-
-            print(output)
-
-        print(self.final())
-
-ConfigFile = 'doctor.txt'
-
-from watchdog.events import FileSystemEventHandler
-class MyHandler(FileSystemEventHandler):
-    def __init__(self, eliza):
-        self.eliza = eliza
-
-    def on_modified(self, event):
-        #print(f'event type: {event.event_type}  path : {event.src_path}')
-        if event.src_path == ConfigFile:
-            print('reloading')
-            self.eliza.load(ConfigFile)
-
-def main():
-    eliza = Eliza()
-
-    from watchdog.observers import Observer
-    from watchdog.events import LoggingEventHandler
-
-    observer = Observer()
-    observer.schedule(MyHandler(eliza), '.', recursive=False)
-    observer.start()
-
-    eliza.load(ConfigFile)
-    eliza.run()
-
-if __name__ == '__main__':
-    logging.basicConfig()
-    main()
