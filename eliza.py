@@ -5,14 +5,11 @@ import string
 from collections import namedtuple
 from nltk.tokenize import word_tokenize
 import os
-import mlconjug
-import spacy
-
+from eliza_helpers import ElizaHelpers
+ 
 import logging
 log = logging.getLogger(__name__)
-#log.level = logging.DEBUG
-
-# default_conjugator.conjugate("see").conjug_info['indicative']['indicative present continuous']['2p 2p']
+log.level = logging.DEBUG
 
 class Key:
     def __init__(self, word, weight, decomps):
@@ -29,15 +26,7 @@ class Decomp:
         self.next_reasmb_index = 0
         self.used_indexes = []
 
-class ElizaHelpers:
-    @staticmethod
-    def remove_punctuation(text):
-        for punct in [',', '.', ';']:
-            if punct in text:
-                text = text[:text.index(punct)]
-        return text
-
-
+        
 class Eliza:
     def __init__(self, config_file):
         self.memory = []
@@ -142,13 +131,20 @@ class Eliza:
             if not reword:
                 continue
             if reword[0] == '(' and reword[-1] == ')':
-                command_parts = int(reword[1:-1]).split(':')
+                command_parts = reword[1:-1].split(';')
                 index = int(command_parts[0])
 
                 if index < 1 or index > len(results):
                     raise ValueError("Invalid result index {}".format(index))
 
                 insert = results[index - 1]
+
+                # would be nice to feed the POS tagger the whole sentence + indexes rather than join and unjoin so much
+                for command in command_parts[1:]:
+                    print(f'command: {command}')
+                    if command == 'gerund':
+                        insert = ElizaHelpers.reconjugate_to_gerund(' '.join(insert))
+
                 insert = ElizaHelpers.remove_punctuation(insert)
 
                 output.extend(insert)

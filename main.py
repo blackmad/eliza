@@ -51,9 +51,9 @@ class MyHandler(FileSystemEventHandler):
         self.eliza = eliza
 
     def on_modified(self, event):
-        print(f'event type: {event.event_type}  path : {event.src_path}')
+        #print(f'event type: {event.event_type}  path : {event.src_path}')
         if os.path.abspath(event.src_path) == os.path.abspath(ConfigFile):
-            print('reloading')
+            print('reloading config')
             self.eliza.load(ConfigFile)
 
 def main():

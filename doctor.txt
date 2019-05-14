@@ -12,7 +12,6 @@ pre: dreams dream
 pre: maybe perhaps
 pre: how what
 pre: when what
-pre: certainly yes
 pre: machine computer
 pre: computers computer
 pre: were was
@@ -172,14 +171,15 @@ key: was 2
     reasmb: What if I had been (2) ?
 key: i
   decomp: * i @desire *
-    reasmb: What would it mean to you if you got (3) ?
-    reasmb: Have you explored (3) before ?
-    reasmb: Why do you want (3) ?
-    reasmb: Suppose you got (3) soon ?
-    reasmb: What if you never got (3) ?
-    reasmb: What would getting (3) mean to you ?
-    reasmb: What does wanting (3) have to do with this discussion ?
-    resamb: For how long have you been wanting (3)?
+#    reasmb: What would it mean to you if you got (3) ?
+    #reasmb: Have you explored getting to (2) (3;gerund) before ?
+    reasmb: Have you explored (3;gerund) before ?
+    #reasmb: Why do you want (3) ?
+    #reasmb: Suppose you got (3) soon ?
+    #reasmb: What if you never got (3) ?
+    #reasmb: What would getting (3) mean to you ?
+    #reasmb: What does wanting (3) have to do with this discussion ?
+    #resamb: For how long have you been wanting (3)?
   decomp: * i am * @sad *
     reasmb: I am sorry to hear that you are (3) .
     reasmb: Do you think that coming here will help you not to be (3) ?

@@ -1,0 +1,3 @@
+nltk
+spacy
+git+git://github.com/gutfeeling/word_forms.git#egg=word_forms
