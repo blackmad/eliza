@@ -6,7 +6,7 @@ from collections import namedtuple
 from nltk.tokenize import word_tokenize
 import os
 from eliza_helpers import ElizaHelpers
- 
+
 import logging
 log = logging.getLogger(__name__)
 log.level = logging.DEBUG
@@ -26,7 +26,7 @@ class Decomp:
         self.next_reasmb_index = 0
         self.used_indexes = []
 
-        
+
 class Eliza:
     def __init__(self, config_file):
         self.memory = []
@@ -222,7 +222,7 @@ class Eliza:
         if output[-1] in string.punctuation:
             output[-2] += output[-1]
             del output[-1]
-            
+
         return " ".join(output)
 
     def initial(self):
@@ -230,3 +230,48 @@ class Eliza:
 
     def final(self):
         return random.choice(self.finals)
+
+    def run(self):
+        print(self.initial())
+
+        while True:
+            sent = input('> ')
+
+            output = self.respond(sent)
+            if output is None:
+                break
+
+            print(output)
+
+        print(self.final())
+
+ConfigFile = 'doctor.txt'
+
+from watchdog.events import FileSystemEventHandler
+class MyHandler(FileSystemEventHandler):
+    def __init__(self, eliza):
+        self.eliza = eliza
+
+    def on_modified(self, event):
+        #print(f'event type: {event.event_type}  path : {event.src_path}')
+        if event.src_path == ConfigFile:
+            print('reloading')
+            self.eliza.load(ConfigFile)
+
+def main():
+    eliza = Eliza()
+
+    from watchdog.observers import Observer
+    from watchdog.events import LoggingEventHandler
+
+    observer = Observer()
+    observer.schedule(MyHandler(eliza), '.', recursive=False)
+    observer.start()
+
+    eliza.load(ConfigFile)
+    eliza.run()
+
+if __name__ == '__main__':
+    logging.basicConfig()
+    main()
+>>>>>>> 3f8991ad32d1274aa7b964997712c402098e1ed2

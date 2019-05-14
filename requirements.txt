@@ -1,3 +1,7 @@
 nltk
+<<<<<<< HEAD
 spacy
 git+git://github.com/gutfeeling/word_forms.git#egg=word_forms
+=======
+watchdog
+>>>>>>> 3f8991ad32d1274aa7b964997712c402098e1ed2
