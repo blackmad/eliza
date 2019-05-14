@@ -172,8 +172,8 @@ key: was 2
 key: i
   decomp: * i @desire *
 #    reasmb: What would it mean to you if you got (3) ?
-    #reasmb: Have you explored getting to (2) (3;gerund) before ?
-    reasmb: Have you explored (3;gerund) before ?
+    #reasmb: Have you explored getting to (2) (3) before ?
+    reasmb: Have you explored (3;gerund) before ? -> @explored
     #reasmb: Why do you want (3) ?
     #reasmb: Suppose you got (3) soon ?
     #reasmb: What if you never got (3) ?
@@ -359,4 +359,11 @@ key: alike 10
 key: like 10
   decomp: * @be * like *
     reasmb: goto alike
+story-key: @explored
+  decomp: * yes *
+    reasmb: How was that experience for you ?
+  decomp: * no *
+    reasmb: Was that disappointing ?
+
+
    

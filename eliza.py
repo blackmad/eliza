@@ -11,11 +11,22 @@ import logging
 log = logging.getLogger(__name__)
 log.level = logging.DEBUG
 
-class Key:
-    def __init__(self, word, weight, decomps):
+class KeyBase:
+    def __init__(self):
+        self.decomps = []
+
+
+class StoryKey(KeyBase):
+    def __init__(self, story_key):
+        self.story_key = story_key
+        super().__init__()
+
+
+class Key(KeyBase):
+    def __init__(self, word, weight):
         self.word = word
         self.weight = weight
-        self.decomps = decomps
+        super().__init__()
 
 
 class Decomp:
@@ -26,11 +37,25 @@ class Decomp:
         self.next_reasmb_index = 0
         self.used_indexes = []
 
+    def __repr__(self):
+        return str(self.__dict__)
+
+
+class Reassmebly:
+    def __init__(self, parts, goto, story_key):
+        self.parts = parts
+        self.goto = goto
+        self.story_key = story_key
+
+    def __repr__(self):
+        return str(self.__dict__)
+
 
 class Eliza:
     def __init__(self, config_file):
         self.memory = []
         self.load(config_file)
+        self.next_story_key = None
 
     def reinit(self):
         self.initials = []
@@ -71,8 +96,14 @@ class Eliza:
                     parts = content.split(' ')
                     word = parts[0]
                     weight = int(parts[1]) if len(parts) > 1 else 1
-                    key = Key(word, weight, [])
+                    key = Key(word, weight)
                     self.keys[word] = key
+                elif tag == 'story-key':
+                    parts = content.split(' ')
+                    word = parts[0]
+                    key = StoryKey(word)
+                    self.keys[word] = key
+                    print('story key: %s' % word)
                 elif tag == 'decomp':
                     parts = content.split(' ')
                     save = False
@@ -82,8 +113,22 @@ class Eliza:
                     decomp = Decomp(parts, save, [])
                     key.decomps.append(decomp)
                 elif tag == 'reasmb':
-                    parts = content.split(' ')
-                    decomp.reasmbs.append(parts)
+                    parts = content.split(' -> ')
+                    word_parts = parts[0].split(' ')
+
+                    story_key  = None
+                    if len(parts) > 1:
+                        story_key = parts[1]
+
+                    goto = None
+                    if word_parts[0] == 'goto':
+                        goto = word_parts[1]
+
+                    decomp.reasmbs.append(Reassmebly(
+                        parts=word_parts,
+                        story_key=story_key,
+                        goto=goto))
+
 
     def _match_decomp_r(self, parts, words, results):
         if not parts and not words:
@@ -175,13 +220,19 @@ class Eliza:
             log.debug('Decomp results after posts: %s', results)
             reasmb = self._next_reasmb(decomp)
             log.debug('Using reassembly: %s', reasmb)
-            if reasmb[0] == 'goto':
-                goto_key = reasmb[1]
+            if reasmb.goto:
+                goto_key = reasmb.goto
                 if not goto_key in self.keys:
                     raise ValueError("Invalid goto key {}".format(goto_key))
                 log.debug('Goto key: %s', goto_key)
                 return self._match_key(words, self.keys[goto_key])
-            output = self._reassemble(reasmb, results)
+            if reasmb.story_key:
+                story_key = reasmb.story_key
+                if not story_key in self.keys:
+                  raise ValueError("Invalid story key {}".format(story_key))
+                log.debug('Storing story key %s for next response' % story_key)
+                self.next_story_key = story_key
+            output = self._reassemble(reasmb.parts, results)
             if decomp.save:
                 self.memory.append(output)
                 log.debug('Saved to memory: %s', output)
@@ -199,9 +250,15 @@ class Eliza:
         words = self._sub(words, self.pres)
         log.debug('After pre-substitution: %s', words)
 
-        keys = [self.keys[w.lower()] for w in words if w.lower() in self.keys]
-        keys = sorted(keys, key=lambda k: -k.weight)
-        log.debug('Sorted keys: %s', [(k.word, k.weight) for k in keys])
+        if self.next_story_key:
+            keys = [self.keys[self.next_story_key],]
+            log.debug('Pulling key from next_story_key: %s', [k.story_key for k in keys])
+            print(keys[0].decomps)
+            self.next_story_key = None
+        else:
+            keys = [self.keys[w.lower()] for w in words if w.lower() in self.keys]
+            keys = sorted(keys, key=lambda k: -k.weight)
+            log.debug('Sorted keys: %s', [(k.word, k.weight) for k in keys])
 
         output = None
 
@@ -213,13 +270,13 @@ class Eliza:
         if not output:
             if self.memory:
                 index = random.randrange(len(self.memory))
-                output = self.memory.pop(index)
+                output = self.memory.pop(index).parts
                 log.debug('Output from memory: %s', output)
             else:
-                output = self._next_reasmb(self.keys['xnone'].decomps[0])
+                output = self._next_reasmb(self.keys['xnone'].decomps[0]).parts
                 log.debug('Output from xnone: %s', output)
 
-        if output[-1] in string.punctuation:
+        if (len(output) > 1) and (output[-1] in string.punctuation):
             output[-2] += output[-1]
             del output[-1]
 
